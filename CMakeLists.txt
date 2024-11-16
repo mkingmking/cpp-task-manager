@@ -30,17 +30,51 @@ include_directories(include)
 set(MOC_HEADERS include/task_manager_gui.h)
 qt6_wrap_cpp(MOC_SOURCES ${MOC_HEADERS})
 
-# Add the executable
-add_executable(tasklist_manager 
-    src/main.cpp 
-    src/task.cpp 
-    src/task_manager.cpp 
+
+
+# Add source files
+set(SOURCES
+    src/main.cpp
+    src/task_model.cpp
+    src/task_view.cpp
+    src/task_controller.cpp
     src/task_manager_gui.cpp
+    
     ${MOC_SOURCES}
 )
 
+# Add headers for MOC processing
+set(HEADERS
+    include/task_model.h
+    include/task_view.h
+    include/task_controller.h
+    include/task_manager_gui.h
+    
+)
+
+# Add executable
+add_executable(tasklist_manager ${SOURCES} ${HEADERS})
+
 # Link libraries
 target_link_libraries(tasklist_manager PRIVATE Qt6::Widgets Qt6::Sql SQLite::SQLite3)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

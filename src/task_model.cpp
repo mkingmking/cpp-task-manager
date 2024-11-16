@@ -1,8 +1,7 @@
-#include "task_manager.h"
+#include "task_model.h"
 #include <iostream>
 
-TaskManager::TaskManager() {
-    // Open or create the SQLite database
+TaskModel::TaskModel(QObject* parent) : QObject(parent) {
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName("tasks.db");
 
@@ -11,7 +10,6 @@ TaskManager::TaskManager() {
         exit(1);
     }
 
-    // Create tasks table if it doesn't exist
     QSqlQuery query;
     query.exec("CREATE TABLE IF NOT EXISTS tasks ("
                "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -19,33 +17,37 @@ TaskManager::TaskManager() {
                "completed INTEGER NOT NULL DEFAULT 0);");
 }
 
-TaskManager::~TaskManager() {
+TaskModel::~TaskModel() {
     if (db.isOpen()) {
         db.close();
     }
 }
 
-void TaskManager::addTask(const QString& description) {
+void TaskModel::addTask(const QString& description) {
     QSqlQuery query;
     query.prepare("INSERT INTO tasks (description, completed) VALUES (:description, 0);");
     query.bindValue(":description", description);
 
-    if (!query.exec()) {
+    if (query.exec()) {
+        emit tasksUpdated();
+    } else {
         std::cerr << "Error adding task: " << query.lastError().text().toStdString() << std::endl;
     }
 }
 
-void TaskManager::completeTask(int id) {
+void TaskModel::completeTask(int id) {
     QSqlQuery query;
     query.prepare("UPDATE tasks SET completed = 1 WHERE id = :id;");
     query.bindValue(":id", id);
 
-    if (!query.exec()) {
+    if (query.exec()) {
+        emit tasksUpdated();
+    } else {
         std::cerr << "Error marking task as completed: " << query.lastError().text().toStdString() << std::endl;
     }
 }
 
-std::vector<std::pair<int, QString>> TaskManager::listTasks(bool showCompleted) {
+std::vector<std::pair<int, QString>> TaskModel::listTasks(bool showCompleted) {
     std::vector<std::pair<int, QString>> tasks;
 
     QSqlQuery query;
@@ -55,15 +57,14 @@ std::vector<std::pair<int, QString>> TaskManager::listTasks(bool showCompleted) 
         query.prepare("SELECT id, description FROM tasks WHERE completed = 0;");
     }
 
-    if (!query.exec()) {
+    if (query.exec()) {
+        while (query.next()) {
+            int id = query.value(0).toInt();
+            QString description = query.value(1).toString();
+            tasks.emplace_back(id, description);
+        }
+    } else {
         std::cerr << "Error fetching tasks: " << query.lastError().text().toStdString() << std::endl;
-        return tasks;
-    }
-
-    while (query.next()) {
-        int id = query.value(0).toInt();
-        QString description = query.value(1).toString();
-        tasks.emplace_back(id, description);
     }
 
     return tasks;

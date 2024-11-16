@@ -1,27 +1,25 @@
 #ifndef TASK_MANAGER_GUI_H
 #define TASK_MANAGER_GUI_H
 
+#include "task_model.h"
+#include "task_view.h"
 #include <QWidget>
-#include <QListWidget>
-#include <QLineEdit>
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QMessageBox>
-#include "task_manager.h"
 
 class TaskManagerGUI : public QWidget {
-    Q_OBJECT  // Required for Qt meta-object system
+    Q_OBJECT
 
 private:
-    TaskManager manager;
-    QListWidget* taskList;
-    QLineEdit* taskInput;
-
-    void refreshTasks();
+    TaskModel* model;  // Reference to the model
+    TaskView* view;    // Reference to the view
 
 public:
     explicit TaskManagerGUI(QWidget* parent = nullptr);
-    ~TaskManagerGUI() override = default;
+    ~TaskManagerGUI() override;
+
+private slots:
+    void handleAddTask();
+    void handleCompleteTask();
+    void updateView();
 };
 
 #endif // TASK_MANAGER_GUI_H

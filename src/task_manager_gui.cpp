@@ -1,7 +1,6 @@
 #include "task_manager_gui.h"
 
 TaskManagerGUI::TaskManagerGUI(QWidget* parent) : QWidget(parent), manager() {
-    // GUI layout setup
     QVBoxLayout* layout = new QVBoxLayout(this);
 
     taskInput = new QLineEdit(this);
@@ -12,7 +11,7 @@ TaskManagerGUI::TaskManagerGUI(QWidget* parent) : QWidget(parent), manager() {
     connect(addTaskButton, &QPushButton::clicked, this, [this]() {
         QString desc = taskInput->text();
         if (!desc.isEmpty()) {
-            manager.addTask(desc.toStdString());
+            manager.addTask(desc);
             taskInput->clear();
             refreshTasks();
         } else {
@@ -33,5 +32,8 @@ TaskManagerGUI::TaskManagerGUI(QWidget* parent) : QWidget(parent), manager() {
 
 void TaskManagerGUI::refreshTasks() {
     taskList->clear();
-    manager.listTasks();
+    auto tasks = manager.listTasks();
+    for (const auto& task : tasks) {
+        taskList->addItem(QString::number(task.first) + ". " + task.second);
+    }
 }

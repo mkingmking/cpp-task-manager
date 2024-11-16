@@ -18,6 +18,11 @@ find_package(Qt6 COMPONENTS Widgets REQUIRED)
 # SQLite setup
 find_package(SQLite3 REQUIRED)
 
+find_package(Qt6 COMPONENTS Widgets Sql REQUIRED)
+
+
+
+
 # Include directories
 include_directories(include)
 
@@ -35,7 +40,8 @@ add_executable(tasklist_manager
 )
 
 # Link libraries
-target_link_libraries(tasklist_manager PRIVATE Qt6::Widgets SQLite::SQLite3)
+target_link_libraries(tasklist_manager PRIVATE Qt6::Widgets Qt6::Sql SQLite::SQLite3)
+
 
 
 

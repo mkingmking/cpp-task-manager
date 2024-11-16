@@ -1,47 +1,70 @@
 #include "task_manager.h"
 #include <iostream>
-#include <algorithm>
 
-TaskManager::TaskManager() : nextId(1) {}
+TaskManager::TaskManager() {
+    // Open or create the SQLite database
+    db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName("tasks.db");
 
-void TaskManager::addTask(const std::string& description) {
-    tasks.push_back(std::make_shared<Task>(nextId++, description));
-    std::cout << "Task added successfully!\n";
+    if (!db.open()) {
+        std::cerr << "Error opening database: " << db.lastError().text().toStdString() << std::endl;
+        exit(1);
+    }
+
+    // Create tasks table if it doesn't exist
+    QSqlQuery query;
+    query.exec("CREATE TABLE IF NOT EXISTS tasks ("
+               "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+               "description TEXT NOT NULL, "
+               "completed INTEGER NOT NULL DEFAULT 0);");
+}
+
+TaskManager::~TaskManager() {
+    if (db.isOpen()) {
+        db.close();
+    }
+}
+
+void TaskManager::addTask(const QString& description) {
+    QSqlQuery query;
+    query.prepare("INSERT INTO tasks (description, completed) VALUES (:description, 0);");
+    query.bindValue(":description", description);
+
+    if (!query.exec()) {
+        std::cerr << "Error adding task: " << query.lastError().text().toStdString() << std::endl;
+    }
 }
 
 void TaskManager::completeTask(int id) {
-    auto it = std::find_if(tasks.begin(), tasks.end(), [id](const auto& task) {
-        return task->getId() == id;
-    });
+    QSqlQuery query;
+    query.prepare("UPDATE tasks SET completed = 1 WHERE id = :id;");
+    query.bindValue(":id", id);
 
-    if (it != tasks.end()) {
-        (*it)->markCompleted();
-        std::cout << "Task marked as completed!\n";
-    } else {
-        std::cout << "Task not found!\n";
+    if (!query.exec()) {
+        std::cerr << "Error marking task as completed: " << query.lastError().text().toStdString() << std::endl;
     }
 }
 
-void TaskManager::deleteTask(int id) {
-    auto it = std::remove_if(tasks.begin(), tasks.end(), [id](const auto& task) {
-        return task->getId() == id;
-    });
+std::vector<std::pair<int, QString>> TaskManager::listTasks(bool showCompleted) {
+    std::vector<std::pair<int, QString>> tasks;
 
-    if (it != tasks.end()) {
-        tasks.erase(it, tasks.end());
-        std::cout << "Task deleted successfully!\n";
+    QSqlQuery query;
+    if (showCompleted) {
+        query.prepare("SELECT id, description FROM tasks;");
     } else {
-        std::cout << "Task not found!\n";
-    }
-}
-
-void TaskManager::listTasks() const {
-    if (tasks.empty()) {
-        std::cout << "No tasks available!\n";
-        return;
+        query.prepare("SELECT id, description FROM tasks WHERE completed = 0;");
     }
 
-    for (const auto& task : tasks) {
-        std::cout << task->toString() << '\n';
+    if (!query.exec()) {
+        std::cerr << "Error fetching tasks: " << query.lastError().text().toStdString() << std::endl;
+        return tasks;
     }
+
+    while (query.next()) {
+        int id = query.value(0).toInt();
+        QString description = query.value(1).toString();
+        tasks.emplace_back(id, description);
+    }
+
+    return tasks;
 }

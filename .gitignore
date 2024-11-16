@@ -1,0 +1,37 @@
+# Ignore build directory
+build/
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore Qt Creator files
+*.pro.user
+*.qtc*
+
+# Ignore CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Ignore compiled object files
+*.o
+*.obj
+
+# Ignore compiled libraries
+*.so
+*.dll
+*.dylib
+*.lib
+*.a
+
+# Ignore executable files
+*.exe
+*.out
+*.app
+
+# Ignore MOC, UIC, and RCC generated files
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+*.moc
